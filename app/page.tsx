@@ -13,6 +13,9 @@ export default function HomePage() {
   return (
     <>
       <ThreeItemGrid />
+      <div>
+        <h1>New Products</h1>
+      </div>
       <Carousel />
       <Footer />
     </>

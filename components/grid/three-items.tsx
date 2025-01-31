@@ -1,6 +1,6 @@
 import { GridTileImage } from 'components/grid/tile';
-import { getCollectionProducts } from 'lib/wix';
-import type { Product } from 'lib/wix/types';
+import { getCollectionProducts, getCollections } from 'lib/wix';
+import type { Product, Collection } from 'lib/wix/types';
 import Link from 'next/link';
 
 function ThreeItemGridItem({
@@ -8,7 +8,7 @@ function ThreeItemGridItem({
   size,
   priority
 }: {
-  item: Product;
+  item: Collection;
   size: 'full' | 'half';
   priority?: boolean;
 }) {
@@ -18,11 +18,11 @@ function ThreeItemGridItem({
     >
       <Link
         className="relative block aspect-square h-full w-full"
-        href={`/product/${item.handle}`}
+        href={`/search/${item.handle}`}
         prefetch={true}
       >
         <GridTileImage
-          src={item.featuredImage.url}
+          src={item.image}
           fill
           sizes={
             size === 'full' ? '(min-width: 768px) 66vw, 100vw' : '(min-width: 768px) 33vw, 100vw'
@@ -32,8 +32,6 @@ function ThreeItemGridItem({
           label={{
             position: size === 'full' ? 'center' : 'bottom',
             title: item.title as string,
-            amount: item.priceRange.maxVariantPrice.amount,
-            currencyCode: item.priceRange.maxVariantPrice.currencyCode
           }}
         />
       </Link>
@@ -42,20 +40,17 @@ function ThreeItemGridItem({
 }
 
 export async function ThreeItemGrid() {
-  // Collections that start with `hidden-*` are hidden from the search page.
-  const homepageItems = await getCollectionProducts({
-    collection: 'hidden-homepage-featured-items'
-  });
+  const  homepageCategory: Collection[] = (await getCollections()).filter(data => data.title === 'Women' || data.title === 'Men' || data.title === 'Kids')
 
-  if (!homepageItems[0] || !homepageItems[1] || !homepageItems[2]) return null;
+  console.log(homepageCategory)
 
-  const [firstProduct, secondProduct, thirdProduct] = homepageItems;
+  const [firstCategory, secondCategory, thirdCategory] = homepageCategory;
 
   return (
-    <section className="mx-auto grid max-w-screen-2xl gap-4 px-4 pb-4 md:grid-cols-6 md:grid-rows-2 lg:max-h-[calc(100vh-200px)]">
-      <ThreeItemGridItem size="full" item={firstProduct} priority={true} />
-      <ThreeItemGridItem size="half" item={secondProduct} priority={true} />
-      <ThreeItemGridItem size="half" item={thirdProduct} />
-    </section>
+      <section className="grid mx-auto md:hidden  max-w-screen-2xl gap-4 px-4 pb-4 md:grid-cols-6 md:grid-rows-2 lg:max-h-[calc(100vh-200px)]">
+        <ThreeItemGridItem size="full" item={firstCategory as Collection} priority={true} />
+        <ThreeItemGridItem size="half" item={secondCategory as Collection} priority={true} />
+        <ThreeItemGridItem size="half" item={thirdCategory as Collection} />
+      </section>
   );
 }

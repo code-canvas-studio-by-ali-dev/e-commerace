@@ -1,19 +1,21 @@
-import { AddToCart } from 'components/cart/add-to-cart';
-import Price from 'components/price';
+'use client'
+
 import Prose from 'components/prose';
 import { Product } from 'lib/wix/types';
 import { VariantSelector } from './variant-selector';
+import { Button } from '@headlessui/react';
+import { PhoneIcon } from '@heroicons/react/24/outline';
 
 export function ProductDescription({ product }: { product: Product }) {
   return (
     <>
       <div className="mb-6 flex flex-col border-b pb-6 dark:border-neutral-700">
-        <h1 className="mb-2 text-5xl font-medium">{product.title}</h1>
+        <h1 className="mb-4 text-4xl font-medium">{product.title}</h1>
         <div className="mr-auto w-auto rounded-full bg-blue-600 p-2 text-sm text-white">
-          <Price
-            amount={product.priceRange.maxVariantPrice.amount}
-            currencyCode={product.priceRange.maxVariantPrice.currencyCode}
-          />
+          <Button className={"flex items-center gap-2 text-xs md:text-sm px-3"}>
+            <PhoneIcon className='size-5' />
+            Get mote info
+          </Button>
         </div>
       </div>
       <VariantSelector options={product.options} variants={product.variants} />
@@ -23,12 +25,6 @@ export function ProductDescription({ product }: { product: Product }) {
           html={product.descriptionHtml}
         />
       ) : null}
-
-      <AddToCart
-        productId={product.id}
-        variants={product.variants}
-        availableForSale={product.availableForSale}
-      />
     </>
   );
 }

@@ -5,7 +5,7 @@ import { getCollections } from 'lib/wix';
 import FilterList from './filter';
 
 async function CollectionList() {
-  const collections = await getCollections();
+  const collections = (await getCollections()).filter(collection => collection.title !== 'All Products' );
   return <FilterList list={collections} title="Collections" />;
 }
 

@@ -36,7 +36,7 @@ const config: Config = {
   plugins: [
     require('@tailwindcss/container-queries'),
     require('@tailwindcss/typography'),
-    plugin(({ matchUtilities, theme }) => {
+    plugin(({ matchUtilities, theme, addUtilities }) => {
       matchUtilities(
         {
           'animation-delay': (value) => {
@@ -49,6 +49,18 @@ const config: Config = {
           values: theme('transitionDelay')
         }
       );
+
+      // Add custom utility to hide scrollbar
+      addUtilities({
+        '.scrollbar-hidden': {
+          /* Firefox */
+          'scrollbar-width': 'none',
+          /* Safari and Chrome */
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
+        }
+      });
     })
   ]
 };

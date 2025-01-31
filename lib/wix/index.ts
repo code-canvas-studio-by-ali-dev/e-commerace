@@ -5,7 +5,7 @@ import { createClient, media, OAuthStrategy } from '@wix/sdk';
 import { collections, products } from '@wix/stores';
 import { SortKey, WIX_SESSION_COOKIE } from 'lib/constants';
 import { cookies } from 'next/headers';
-import { Cart, Collection, Menu, Page, Product, ProductVariant } from './types';
+import { Cart, Collection, Menu, Page, Product, ProductVariant, SEO } from './types';
 
 const cartesian = <T>(data: T[][]) =>
   data.reduce((a, b) => a.flatMap((d) => b.map((e) => [...d, e])), [[]] as T[][]);
@@ -74,17 +74,20 @@ const reshapeCart = (cart: currentCart.Cart): Cart => {
   };
 };
 
-const reshapeCollection = (collection: collections.Collection) =>
-  ({
+const reshapeCollection = (collection: collections.Collection): Collection => {
+  const imageUrl = collection.media?.mainMedia?.image?.url || '';
+  return {
     path: `/search/${collection.slug}`,
-    handle: collection.slug,
-    title: collection.name,
-    description: collection.description,
+    handle: collection.slug ?? '',
+    title: collection.name ?? '',
+    description: collection.description ?? '',
     seo: {
-      title: collection.name
-    },
+      title: collection.name ?? ''
+    } as SEO,
+    image: imageUrl,
     updatedAt: new Date().toISOString()
-  }) as Collection;
+  };
+};
 
 const reshapeCollections = (collections: collections.Collection[]) => {
   return collections.map(reshapeCollection);
@@ -135,39 +138,39 @@ const reshapeProduct = (item: products.Product) => {
     tags: [],
     variants: item.manageVariants
       ? item.variants?.map((variant) => ({
-          id: variant._id!,
-          title: item.name!,
-          price: {
-            amount: String(variant.variant?.priceData?.price),
-            currencyCode: variant.variant?.priceData?.currency
-          },
-          availableForSale: variant.stock?.trackQuantity
-            ? (variant.stock?.quantity ?? 0 > 0)
-            : true,
-          selectedOptions: Object.entries(variant.choices ?? {}).map(([name, value]) => ({
-            name,
-            value
-          }))
+        id: variant._id!,
+        title: item.name!,
+        price: {
+          amount: String(variant.variant?.priceData?.price),
+          currencyCode: variant.variant?.priceData?.currency
+        },
+        availableForSale: variant.stock?.trackQuantity
+          ? (variant.stock?.quantity ?? 0 > 0)
+          : true,
+        selectedOptions: Object.entries(variant.choices ?? {}).map(([name, value]) => ({
+          name,
+          value
         }))
+      }))
       : cartesian(
-          item.productOptions?.map(
-            (x) =>
-              x.choices?.map((choice) => ({
-                name: x.name,
-                value:
-                  x.optionType === products.OptionType.color ? choice.description : choice.value
-              })) ?? []
-          ) ?? []
-        ).map((selectedOptions) => ({
-          id: '00000000-0000-0000-0000-000000000000',
-          title: item.name!,
-          price: {
-            amount: String(item.price?.price!),
-            currencyCode: item.price?.currency!
-          },
-          availableForSale: item.stock?.inventoryStatus === 'IN_STOCK',
-          selectedOptions: selectedOptions
-        })),
+        item.productOptions?.map(
+          (x) =>
+            x.choices?.map((choice) => ({
+              name: x.name,
+              value:
+                x.optionType === products.OptionType.color ? choice.description : choice.value
+            })) ?? []
+        ) ?? []
+      ).map((selectedOptions) => ({
+        id: '00000000-0000-0000-0000-000000000000',
+        title: item.name!,
+        price: {
+          amount: String(item.price?.price!),
+          currencyCode: item.price?.currency!
+        },
+        availableForSale: item.stock?.inventoryStatus === 'IN_STOCK',
+        selectedOptions: selectedOptions
+      })),
     seo: {
       description: item.description!,
       title: item.name!
@@ -189,11 +192,11 @@ export async function addToCart(
           options:
             variant.id === '00000000-0000-0000-0000-000000000000'
               ? {
-                  options: variant.selectedOptions.reduce(
-                    (acc, option) => ({ ...acc, [option.name!]: option.value! }),
-                    {} as Record<string, string>
-                  )
-                }
+                options: variant.selectedOptions.reduce(
+                  (acc, option) => ({ ...acc, [option.name!]: option.value! }),
+                  {} as Record<string, string>
+                )
+              }
               : { variantId: variant?.id }
         })
       },
@@ -314,6 +317,7 @@ export async function getCollections(): Promise<Collection[]> {
         description: 'All products'
       },
       path: '/search',
+      image: '',
       updatedAt: new Date().toISOString()
     },
     // Filter out the `hidden` collections.
@@ -497,7 +501,7 @@ export const getWixClient = async () => {
   try {
     const cookieStore = await cookies();
     sessionTokens = JSON.parse(cookieStore.get(WIX_SESSION_COOKIE)?.value || '{}');
-  } catch (e) {}
+  } catch (e) { }
   const wixClient = createClient({
     auth: OAuthStrategy({
       clientId: process.env.WIX_CLIENT_ID!,
