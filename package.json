@@ -1,8 +1,10 @@
 {
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=20",
+    "pnpm": ">=9"
   },
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
